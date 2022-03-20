@@ -15,11 +15,29 @@
     February-March 2022
 """
 
-# NOTA: En Spyder se tienen las celdas, demarcadas con un comentario de la
-#       forma '#%%' que permite ejecutar una sección de código independiente
-#       del resto. 
-#       Esta práctica está realizada de manera que cada ejercicio está
+# NOTA: - Este IDE permite tener celdas de código que se pueden ejecutar 
+#       independientemente del código que tienen antes o después, 
+#       es decir, es como una celda de código de un Colab Notebook: 
+#       no es necesario ejecutar todo el programa entero, se puede 
+#       ir paso a paso.
 
+#       - Al igual que un Colab Notebook, se han de ejecutar las celdas 
+#       en orden la primera vez que se carga el fichero para tener las 
+#       funciones y variables de celdas anteriores en memoria. 
+#       Una vez realizado esto se pueden ejecutar las celdas en cualquier orden.
+
+#       - Las celdas se delimitan con un comentario de la forma '#%%' y pueden 
+#       ejecutarse presionando Ctrl+Enter en una celda resaltada o bien 
+#       haciendo clic en el icono que está a la derecha del icono de "Play" 
+#       que ejecuta el código entero secuencialmente.
+
+#       - Las celdas están organizadas de manera que la primera celda abarca 
+#       todas las funciones implementadas, y luego existe una celda por 
+#       cada ejercicio, de esta manera solamente es necesario ejecutar la 
+#       celda inicial, denominada la celda 0 y la celda del ejercicio 
+#       que se desee ejecutar, el cual se encuentra apropiadamente 
+#       identificada en el código.
+    
 # LIBRERIAS
 
 # - Importando Numpy.
