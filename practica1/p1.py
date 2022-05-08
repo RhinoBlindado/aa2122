@@ -245,7 +245,7 @@ def gradient_descent(w_ini, lr, grad_fun, fun, epsilon, max_iters):
 
 def graph_ex1_3_a(it, hist_1, hist_2, labels, title=""):
     """
-    Dibuja las curvas de aprendizaje dependiendo del Eta utilizad.
+    Dibuja las curvas de aprendizaje dependiendo del Eta utilizado.
     
     Función auxiliar para dibujar el gráfico del Ejercicio 1.3.a
 
@@ -411,12 +411,8 @@ def sgd(x, y, wIni, lr, batchSize, epsilon, maxIters):
             
             # Si se obtiene el máximo de iteraciones dentro de este bucle, 
             # cortar la ejecución también.
-            if(i < maxIters): break
-            
-        # Si el error después de una época es menor al que se desea, también
-        # finalizar.
-        if(Err(x, y, w) < epsilon):
-            break
+            if(i > maxIters): break
+    
         
     return w, i
         
@@ -1193,4 +1189,3 @@ for i in startPoint:
 
 for i in range(0, len(startPoint)):
     graph_bonus_1(it, funcHist3[i*2], funcHist3[(i*2)+1], hist[i*2], hist[(i*2)+1], title="GD vs Newton: Punto inicial "+ str(startPoint[i]))
-
