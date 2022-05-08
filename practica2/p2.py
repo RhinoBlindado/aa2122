@@ -84,6 +84,48 @@ def readData(file_x, file_y, digits, labels):
 	
 	return x, y
 
+def plot_datos_cuad(X, y, fz, title='Point cloud plot', xaxis='x axis', yaxis='y axis'):
+    #Preparar datos
+    min_xy = X.min(axis=0)
+    max_xy = X.max(axis=0)
+    border_xy = (max_xy-min_xy)*0.01
+    
+    #Generar grid de predicciones
+    xx, yy = np.mgrid[min_xy[0]-border_xy[0]:max_xy[0]+border_xy[0]+0.001:border_xy[0], 
+                      min_xy[1]-border_xy[1]:max_xy[1]+border_xy[1]+0.001:border_xy[1]]
+    grid = np.c_[xx.ravel(), yy.ravel(), np.ones_like(xx).ravel()]
+    
+    pred_y = []
+    for i, j, _ in grid:
+        pred_y.append(signo(fz(i, j)))
+    
+    pred_y = np.asarray(pred_y)
+    pred_y = np.clip(pred_y, -1, 1).reshape(xx.shape)
+    
+    #Plot
+    f, ax = plt.subplots(figsize=(8, 6))
+    contour = ax.contourf(xx, yy, pred_y, 50, cmap='RdBu',vmin=-1, vmax=1)
+    ax_c = f.colorbar(contour)
+    ax_c.set_label('$f(x, y)$')
+    ax_c.set_ticks([-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1])
+    # ax.scatter(X[:, 0], X[:, 1], c=y, s=50, linewidth=2, 
+                # cmap="RdYlBu", edgecolor='white')
+    
+    XX, YY = np.meshgrid(np.linspace(round(min(min_xy)), round(max(max_xy)),X.shape[0]),np.linspace(round(min(min_xy)), round(max(max_xy)),X.shape[0]))
+    positions = np.vstack([XX.ravel(), YY.ravel()])
+    pos = []
+    for i,j in positions.T:
+        pos.append(fz(i,j))
+    pos = np.asarray(pos)
+    # ax.contour(XX,YY,pos.reshape(X.shape[0],X.shape[0]),[0], colors='black')
+    
+    ax.set(
+       xlim=(min_xy[0]-border_xy[0], max_xy[0]+border_xy[0]), 
+       ylim=(min_xy[1]-border_xy[1], max_xy[1]+border_xy[1]),
+       xlabel=xaxis, ylabel=yaxis)
+    plt.title(title)
+    plt.show()
+
 ## FUNCIONES AUXILIARES
 
 def stop():
@@ -91,8 +133,7 @@ def stop():
     Detiene la ejecución hasta que se presione 'Enter'
 
     """
-    # Descomentar si es necesaria!
-    # input("Presiona Enter para continuar. . .")
+    input("Presiona Enter para continuar. . .")
     pass
 
 def progBarHeader(step):
@@ -174,9 +215,72 @@ def scatterPlot(xData, yData=None, yLabel=None, yNames=None, line=None, plotRang
     else:
         x = xData[:, 0]
         y = xData[:, 1]
+        plt.scatter(x, y)    
+    
+    plt.title(title)
+    plt.show()
+
+
+def scatterPlotNonL(xData, yData=None, yLabel=None, yNames=None, function=None, plotRange=None, title=None):
+    """
+    WIP
+    
+    """
+    plt.figure()
+    
+    if yData is not None:
+        
+        if function is not None:
+            loB = plotRange[0]
+            hiB = plotRange[1]
+            
+            xAx = np.linspace(loB, hiB, len(yData))
+            yAx = xAx
+            
+            X, Y = np.meshgrid(xAx, yAx)
+            
+            Z = function(X, Y)
+            
+            plt.contour(X, Y, Z, 0, colors='c', linestyles='dashed')
+            # Z = np.clip(Z, -1, 1)
+            plt.contourf(X, Y, Z, 50, cmap='RdBu',vmin=-1, vmax=1)
+            # clrBar = plt.colorbar(clrs)
+            # clrBar.set_label('Signo')
+            # clrBar.set_ticks([-1, 0, 1])
+
+            if len(plotRange) == 2:
+                plt.xlim([loB, hiB])
+                plt.ylim([loB, hiB])
+                
+            if len(plotRange) == 4:
+                plt.xlim([plotRange[0],  plotRange[1]])
+                plt.ylim([plotRange[2],  plotRange[3]])
+        
+        actColors = cm.rainbow(np.linspace(0, 1, len(yLabel)))
+        
+        for i, label in enumerate(yLabel):
+            x = xData[ np.where(yData == label) ][:, 0]
+            y = xData[ np.where(yData == label) ][:, 1]    
+            if yNames is None:
+                plt.scatter(x, y, color=actColors[i], label="Etiqueta {}".format(str(label)))
+            else:
+                plt.scatter(x, y, color=actColors[i], label="{}".format(str(yNames[i])))
+
+
+        plt.legend(loc='upper right')
+
+    else:
+        x = xData[:, 0]
+        y = xData[:, 1]
         plt.scatter(x, y)
     
-            
+    actTextColr = cm.RdBu(np.linspace(0, 1, 2))
+
+    plt.text(-15, -65, "Zona -", alpha=0.75, color="black", backgroundcolor="white")
+    plt.text(-3, -65, "█", color=actTextColr[0], backgroundcolor="white")
+    plt.text(3, -65, "Zona +", color="black", backgroundcolor="white")
+    plt.text(15, -65, "█", color=actTextColr[1], backgroundcolor="white")
+
     plt.title(title)
     plt.show()
 
@@ -204,7 +308,6 @@ def addNoise(y, percent):
     
     # Obtener la proporción por etiqueta del ruido, o sea dividir por 
     # la proporción y luego por la longitud de las etiquetas.
-    noiseSize = int(len(y) * (percent / 2))
 
     # Obtener los índices de las etiquetas.
     posNoise = np.where(y == 1)
@@ -216,8 +319,12 @@ def addNoise(y, percent):
     
     # Obtener los primeros índices luego del barajeo hasta la proporción
     # adecuada.
-    posNoise = posNoise[0][:noiseSize]
-    negNoise = negNoise[0][:noiseSize]
+    
+    noiseSizePos = int(np.round(len(posNoise[0]) * percent))
+    noiseSizeNeg = int(np.round(len(negNoise[0]) * percent))
+        
+    posNoise = posNoise[0][:noiseSizePos]
+    negNoise = negNoise[0][:noiseSizeNeg]
     
     # Cambiar dichos valores en las etiquetas y retornarlas.
     yNoided[posNoise] = -1
@@ -247,48 +354,6 @@ def getTags(x, a, b):
     
     return np.asarray(y)
 
-def plot_datos_cuad(X, y, fz, title='Point cloud plot', xaxis='x axis', yaxis='y axis'):
-    #Preparar datos
-    min_xy = X.min(axis=0)
-    max_xy = X.max(axis=0)
-    border_xy = (max_xy-min_xy)*0.01
-    
-    #Generar grid de predicciones
-    xx, yy = np.mgrid[min_xy[0]-border_xy[0]:max_xy[0]+border_xy[0]+0.001:border_xy[0], 
-                      min_xy[1]-border_xy[1]:max_xy[1]+border_xy[1]+0.001:border_xy[1]]
-    grid = np.c_[xx.ravel(), yy.ravel(), np.ones_like(xx).ravel()]
-    
-    pred_y = []
-    for i, j, _ in grid:
-        pred_y.append(signo(fz(i, j)))
-    
-    pred_y = np.asarray(pred_y)
-    pred_y = np.clip(pred_y, -1, 1).reshape(xx.shape)
-    
-    #Plot
-    f, ax = plt.subplots(figsize=(8, 6))
-    contour = ax.contourf(xx, yy, pred_y, 50, cmap='RdBu',vmin=-1, vmax=1)
-    ax_c = f.colorbar(contour)
-    ax_c.set_label('$f(x, y)$')
-    ax_c.set_ticks([-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1])
-    ax.scatter(X[:, 0], X[:, 1], c=y, s=50, linewidth=2, 
-                cmap="RdYlBu", edgecolor='white')
-    
-    XX, YY = np.meshgrid(np.linspace(round(min(min_xy)), round(max(max_xy)),X.shape[0]),np.linspace(round(min(min_xy)), round(max(max_xy)),X.shape[0]))
-    positions = np.vstack([XX.ravel(), YY.ravel()])
-    pos = []
-    for i,j in positions.T:
-        pos.append(fz(i,j))
-    pos = np.asarray(pos)
-    # ax.contour(XX,YY,pos.reshape(X.shape[0],X.shape[0]),[0], colors='black')
-    
-    ax.set(
-       xlim=(min_xy[0]-border_xy[0], max_xy[0]+border_xy[0]), 
-       ylim=(min_xy[1]-border_xy[1], max_xy[1]+border_xy[1]),
-       xlabel=xaxis, ylabel=yaxis)
-    plt.title(title)
-    plt.show()
-    
     
 def frontierFun1(x, y):
     return (np.square(x - 10) + np.square(y - 20) - 400)
@@ -308,6 +373,16 @@ def getTagsFF(x, fun):
         y.append(signo(fun(i[0], i[1])))
     
     return np.asarray(y) 
+
+def getFunAcc(x, y, fun):
+    
+    hit = 0
+    
+    for x_i, y_i in zip(x,y):
+        if(signo(fun(x_i[0], x_i[1])) == y_i):
+            hit += 1
+    
+    return hit / len(y)
 
 ## FUNCIONES EJER 1 FIN
 
@@ -334,42 +409,104 @@ def addBias(x):
     return xBias
 
 def ajusta_PLA(datos, label, max_iter, vini, pocket=False):
+    """
+    Implementación del Algoritmo Perceptrón (PLA) y Perceptrón-Pocket (PLA-Pocket)
+
+    Parameters
+    ----------
+    datos : Array
+        Vector de características.
+    label : Array
+        Vector de etiquetas.
+    max_iter : Int
+        Número máximo de iteraciones.
+    vini : Array
+        Pesos iniciales.
+    pocket : Boolean, opcional
+        Modo Pocket. Por defecto False, modo PLA.
+
+    Returns
+    -------
+    w : Array
+        Pesos finales obtenidos en el caso de PLA.
+        Mejores pesos obtenidos en el caso de PLA-Pocket
+    i : Int
+        Iteraciones necesarias para obtener dichos pesos.
+
+    """
     
+    # Inicialización básica
     i = 0
     w = vini
     
+    # Para la versión Pocket:
+    # - El mejor peso obtenido
     bestW = None
+    # - El mejor error obtenido, inicializado a "+infinito".
     bestErr = float('inf')
-    
+        
+    # Mientras no se haya llegado al máximo de iteraciones...
     while (i < max_iter):
         
+        # Variable bandera que permite determinar si en alguna iteracion se 
+        # modifican lo pesos.
         modified = False
         
+        # ... y para cada x en datos y su correspondiente y en label...
         for x, y in zip(datos, label):
             
+            # ... Si el signo del producto de x con w no es igual que y...
             if(signo(x.dot(w)) != y):
+                # ... modificar el peso para que se ajuste a los datos..
                 w = w + x*y
+                # ... activar la bandera de modificación.
                 modified = True
             
-        if (pocket):
-            
-            actErr = errPLA(datos, label, w) 
-            
-            if (actErr < bestErr):
-                bestW = w
-                bestErr = actErr
-            
+            # ... Si es la versión Pocket ...
+            if(pocket):
+                # ... obtener el error actual ...
+                actErr = errPLA(datos, label, w)
+                
+                # ...si es mejor que el mejor error, 
+                # actualizar y guardar el peso.
+                if (actErr < bestErr):
+                    bestW = w
+                    bestErr = actErr
+        
+        # ... Si ha habido un pase entero por los datos y no se modificó w,
+        # entonces parar el bucle.
         if (not modified):
             break
         
         i += 1
 
+    # Si es la versión pocket, se devuelve el mejor peso en vez del último.
     if (pocket):
         w = bestW
         
+    # Devolver el último peso, si es PLA o el mejor peso si es PLA-Pocket 
+    # junto con las iteraciones.
     return w, i
 
 def accPLA(x, y, w):
+    """
+    Obtener el accuracy de los pesos ajustados por PLA
+
+    Parameters
+    ----------
+    x : TYPE
+        DESCRIPTION.
+    y : TYPE
+        DESCRIPTION.
+    w : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    perc : TYPE
+        DESCRIPTION.
+
+    """
     
     # Se realiza una "predicción" de los datos.
     h_w = x.dot(w)
@@ -400,7 +537,7 @@ def errPLA(x, y, w):
         if(signo(wTxi) != signo(yi)):
             diffCount += 1
     
-    return diffCount
+    return diffCount / len(y)
 
 def accRL(x, y, w):
     
@@ -490,6 +627,7 @@ def sgd(x, y, wIni, lr, batchSize, maxIters, gradFun, wStop = True):
             
             # Realizar el cálculo del gradiente con el lote j-ésimo.
             w = w - lr * gradFun(xShuff[ini:fin], yShuff[ini:fin], w)
+            
             # Sumar una iteración.
             i += 1 
         
@@ -503,7 +641,6 @@ def sgd(x, y, wIni, lr, batchSize, maxIters, gradFun, wStop = True):
             break
         
     return w, i
-
 
 def getBestParams(x, y, wIn, eta, batch, maxIters, gradFun):
     
@@ -671,41 +808,52 @@ def evalFunction(x_train, y_train, x_test, y_test, w, accFun, errFun, algoName):
 
 # Dibujar una gráfica con la nube de puntos de salida correspondiente.
 
+print("+-------------+")
+print("|Ejercicio 1.1|")
+print("+-------------+\n")
+
+# Obteniendo los puntos con la distribución uniforme y dibujándolos.
 x1_1 = simula_unif(50, 2, [-50,50])
 scatterPlot(x1_1, title="Distribución Uniforme: 50 puntos")
 
-x1_1 = simula_gauss(50, 2, np.array([5,7]))
+# Obteniendo los puntos con la distribución gaussiana y dibujándolos.
+x1_1 = simula_gauss(50, 2, [5,7])
 scatterPlot(x1_1, title="Distribución Gaussiana: 50 puntos")
-
-# stop()
 
 ### EJERCICIO 1.2 
 #############
 
-# Dibujar una gráfica con la nube de puntos de salida correspondiente
-
 #%% EJERCICIO 1.2.a
 #############
 
+print("+---------------+")
+print("|Ejercicio 1.2.a|")
+print("+---------------+\n")
+
 x1_2 = simula_unif(100, 2, [-50, 50])
 
-a, b = simula_recta([1, 3])
+a, b = simula_recta([11, 16])
+
+print("Generando recta con valores a = {:.4f} y b = {:.4f}".format(a, b))
 
 y1_2 = getTags(x1_2, a, b)
 
-scatterPlot(x1_2, yData=y1_2, yLabel=[-1,1], line=[a, b], plotRange=[-50,50], title="Ajuste perfecto; recta $y={:.2f} + x \cdot {:.2f}$".format(b,a))
+scatterPlot(x1_2, yData=y1_2, yLabel=[1,-1], line=[a, b], plotRange=[-50,50], title="Etiquetado perfecto con recta $y={:.2f} + x \cdot {:.2f}$".format(b,a))
 
-# stop()
 
 #%% EJERCICIO 1.2.b
 #############
+
+print("+---------------+")
+print("|Ejercicio 1.2.b|")
+print("+---------------+\n")
 
 # Dibujar una gráfica donde los puntos muestren el resultado de su etiqueta, junto con la recta usada para ello
 # Array con 10% de indices aleatorios para introducir ruido
 
 y1_2Noise = addNoise(y1_2, 0.1)
 
-scatterPlot(x1_2, yData=y1_2Noise, yLabel=[-1,1], line=[a, b], plotRange=[-50,50], title="Ajuste con 10% de error; recta $y={:.2f} + x \cdot {:.2f}$".format(b,a))
+scatterPlot(x1_2, yData=y1_2Noise, yLabel=[1,-1], line=[a, b], plotRange=[-50,50], title="Etiquetado con 10% de error; recta $y={:.2f} + x \cdot {:.2f}$".format(b,a))
 
 # stop()
 
@@ -713,16 +861,30 @@ scatterPlot(x1_2, yData=y1_2Noise, yLabel=[-1,1], line=[a, b], plotRange=[-50,50
 #############
 # Supongamos ahora que las siguientes funciones definen la frontera de clasificación de los puntos de la muestra en lugar de una recta
 
-yf1 = getTagsFF(x1_2, frontierFun1)
-yf1Noise = addNoise(yf1, 0.1)
+print("+---------------+")
+print("|Ejercicio 1.2.c|")
+print("+---------------+\n")
 
-plot_datos_cuad(x1_2, yf1Noise, frontierFun1, title='Point cloud plot', xaxis='x axis', yaxis='y axis')
+fNames = ["f_1", "f_2", "f_3", "f_4"]
+fFuncs = [frontierFun1, frontierFun2, frontierFun3, frontierFun4]
 
-# plot_datos_cuad(x, yNoise, frontierFun2, title='Point cloud plot', xaxis='x axis', yaxis='y axis')
+print("Funciones más complejas con etiquetado lineal:")
 
-# plot_datos_cuad(x, yNoise, frontierFun3, title='Point cloud plot', xaxis='x axis', yaxis='y axis')
 
-# plot_datos_cuad(x, yNoise, frontierFun4, title='Point cloud plot', xaxis='x axis', yaxis='y axis')
+for name, func in zip(fNames, fFuncs):
+    
+    print(" - {} Accuracy:\t {:.2f}%".format(name, getFunAcc(x1_2, y1_2Noise, func) * 100))
+    scatterPlotNonL(x1_2, yData=y1_2Noise, yLabel=[1, -1], function=func, plotRange=[-50, 50], title="Función ${}(x,y)$ con etiquetas lineales + ruido".format(name))
+
+print("\nFunciones más complejas con etiquetado etiquetado propio + ruido:")
+
+for name, func in zip(fNames, fFuncs):
+    
+    yf = getTagsFF(x1_2, func)
+    yfN = addNoise(yf, 0.1)
+    
+    print(" - {} Accuracy:\t {:.2f}%".format(name, getFunAcc(x1_2, yfN, func) * 100))
+    scatterPlotNonL(x1_2, yData=yfN, yLabel=[1, -1], function=func, plotRange=[-50, 50], title="Función ${}(x,y)$ con etiquetas propias + ruido".format(name))
 
 
 # stop()
@@ -752,7 +914,7 @@ print(" - Pesos:\t\t", w)
 print(" - Iteraciones:\t", iters)
 print(" - Accuracy:\t {:.2f}%".format(accPLA(addBias(x1_2), y1_2, w) * 100))
 
-scatterPlot(x1_2, yData=y1_2, yLabel=[-1,1], line=w, plotRange=[-50,50], title="PLA: Ajuste Perfecto, inicialización a cero.")
+scatterPlot(x1_2, yData=y1_2, yLabel=[1,-1], line=w, plotRange=[-50,50], title="PLA: Ajuste Perfecto, inicialización a cero.")
 
 # Random initializations
 wIniArr = []
@@ -770,7 +932,7 @@ for i in range(0,10):
     
     itMean += itTemp
 
-    print("{:2d} | ({: 8.4f}, {: 8.4f}, {: 8.4f}) | ({: 8.4f}, {: 8.4f}, {: 8.4f}) | {: 3.2f}%  | {:5d}" \
+    print("{:2d} | [{: 8.4f}, {: 8.4f}, {: 8.4f}] | [{: 8.4f}, {: 8.4f}, {: 8.4f}]    | {: 3.2f}%  | {:5d}" \
           .format(i, wIniTemp[0], wIniTemp[1], wIniTemp[2], wEndTemp[0], wEndTemp[1], wEndTemp[2], \
               (accPLA(addBias(x1_2), y1_2, wEndTemp) * 100), itTemp))
 
@@ -797,7 +959,7 @@ print(" - Pesos:\t\t", w)
 print(" - Iteraciones:\t", iters)
 print(" - Accuracy:\t {:.2f}%".format(accPLA(addBias(x1_2), y1_2Noise, w) * 100))
 
-scatterPlot(x1_2, yData=y1_2Noise, yLabel=[-1,1], line=w, plotRange=[-50,50], title="PLA: 10% ruido, inicialización a cero.")
+scatterPlot(x1_2, yData=y1_2Noise, yLabel=[1,-1], line=w, plotRange=[-50,50], title="PLA: 10% ruido, inicialización a cero.")
 
 # Random initializations
 wIniArr = []
@@ -805,6 +967,7 @@ wFinArr = []
 itArr   = []
 
 itMean  = 0
+accMean = 0
 
 print("\nEntrenamiento con vectores inicializados a valores entre [0, 1]:")
 print(" # | Pesos Iniciales                | Pesos Finales                   | Accuracy | Iteraciones")
@@ -814,13 +977,15 @@ for i in range(0,10):
     wEndTemp, itTemp = ajusta_PLA(addBias(x1_2), y1_2Noise, PLA_MAXITERS, wIniTemp)
     
     itMean += itTemp
-
+    actAcc = accPLA(addBias(x1_2), y1_2Noise, wEndTemp)
+    accMean += actAcc
     print("{:2d} | ({: 8.4f}, {: 8.4f}, {: 8.4f}) | ({: 8.4f}, {: 8.4f}, {: 8.4f}) | {: 3.2f}%  | {:5d}" \
           .format(i, wIniTemp[0], wIniTemp[1], wIniTemp[2], wEndTemp[0], wEndTemp[1], wEndTemp[2], \
-              (accPLA(addBias(x1_2), y1_2Noise, wEndTemp) * 100), itTemp))
+              (actAcc * 100), itTemp))
 
 itMean /= 10
-print('\nValor medio de iteraciones necesario para converger: {}'.format(itMean))
+accMean /= 10
+print('\nValor medio de accuracy: {: 3.2f}%'.format(accMean * 100))
 
 # stop()
 
@@ -840,11 +1005,10 @@ a_2, b_2 = simula_recta([0, 2])
 
 y2_train = getTags(x2_train, a_2, b_2)
 
-scatterPlot(x2_train, yData=y2_train, yLabel=[-1,1], line=[a_2, b_2], plotRange=[-0.25,2.25], title="100 datos generados con recta ideal")
+scatterPlot(x2_train, yData=y2_train, yLabel=[1,-1], line=[a_2, b_2], plotRange=[-0.25,2.25], title="100 datos generados con recta ideal")
 
 RL_MAXITERS = 100000
 wIni = np.array([0, 0, 0])
-
 
 x2_trainB = addBias(x2_train)
 
@@ -858,7 +1022,7 @@ lr = 0.09960000000000001
 
 bestW, it_2 = sgd(x2_trainB, y2_train, wIni, lr, batchSize, RL_MAXITERS, gradRL)
 
-scatterPlot(x2_train, yData=y2_train, yLabel=[-1,1], line=bestW, plotRange=[-0.25, 2.25], title="RL: Recta obtenida por SGD para datos de entrenamiento")
+scatterPlot(x2_train, yData=y2_train, yLabel=[1,-1], line=bestW, plotRange=[-0.25, 2.25], title="RL: Recta obtenida por SGD para datos de entrenamiento")
 
 print(" - Batch Size:\t", batchSize)
 print(" - Eta:\t\t\t", lr)
@@ -879,7 +1043,7 @@ y2_test = getTags(x2_test, a_2, b_2)
 print("Resultado para conjunto de test con tamaño >999:")
 print(" - Error:\t\t", errRL(addBias(x2_test), y2_test, bestW))
 print(" - Accuracy:\t{: 3.2f}%".format(accRL(addBias(x2_test), y2_test, bestW) * 100))
-scatterPlot(x2_test, yData=y2_test, yLabel=[-1,1], line=bestW, plotRange=[-0.25, 2.25], title="RL: Recta en nuevos datos generados de test")
+scatterPlot(x2_test, yData=y2_test, yLabel=[1,-1], line=bestW, plotRange=[-0.25, 2.25], title="RL: Recta en nuevos datos generados de test")
 
 # Comentar en memoria primer experimento con estos datos: 
 # etas = [0.0001, 0.1, 0.0005]
@@ -1002,15 +1166,15 @@ evalFunction(x, y, x_test, y_test, wPocket, accPLA, errPLA, "PLA-Pocket")
 print("Regresión Logística")
 print("-------------------")
 
+# batchSize = 2
+# lr = 0.09960000000000001
+
+#etas = [0.001, 0.1, 0.0005]
+#batches = [2, 100, 2]
+#bestW, lr, batchSize, it_2 = getBestParams(x, y, [0,0,0], etas, batches, RL_MAXITERS, gradRL)
+
 batchSize = 2
-lr = 0.09960000000000001
-
-etas = [0.001, 0.1, 0.0005]
-batches = [2, 100, 2]
-bestW, lr, batchSize, it_2 = getBestParams(x, y, [0,0,0], etas, batches, RL_MAXITERS, gradRL)
-
-# batchSize =2
-# lr=  0.08700000000000001
+lr=  0.08700000000000001
 
 wRL, _ = sgd(x, y, [0, 0, 0], lr, batchSize, RL_MAXITERS, gradRL)
 
@@ -1053,6 +1217,9 @@ print("+---------+\n")
 
 delta = 0.05
 dVC = 3
-Hcardinal = len(y_test)
+N_in = len(y)
+N_test = len(y_test)
 
-print("")
+eIns = []
+
+
