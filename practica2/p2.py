@@ -6,14 +6,14 @@
     Práctica 2: Complejidad H y Modelos Lineales
     Asignatura: Aprendizaje Automático
     Autor: Valentino Lugli (Github: @RhinoBlindado)
-    Abril 2022
+    Abril-Mayo 2022
     
 [ENGLISH]
 
     Practice 2: H Complexity and Linear Models
     Course: Machine Learning
     Author: Valentino Lugli (Github: @RhinoBlindado)
-    April 2022
+    April-May 2022
 """
 
 # LIBRERIAS
@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 # Fijamos la semilla
-np.random.seed(1)
+np.random.seed(1995)
 
 # FUNCIONES AUXILIARES Y PROVISTAS
 
@@ -165,17 +165,40 @@ def progBar(actual, total, step, nextStep, char='█'):
 
 ## FUNCIONES EJER 1
 
-def scatterPlot(xData, yData=None, yLabel=None, yNames=None, line=None, plotRange=None, colors=None, title=None):
+def scatterPlot(xData, yData=None, yLabel=None, yNames=None, line=None, plotRange=None, title=None):
     """
-    WIP
-    
+    Función que permite dibujar puntos, puntos con rectas ya sean rectas o hiperplanos.
+
+    Parameters
+    ----------
+    xData : Array
+        Puntos 2D
+    yData : Array, opcional.
+        Datos de las etiquetas numéricas de los puntos 2D.
+    yLabel : Array, opcional
+        Indicación de cuales son las etiquetas como tal.
+    yNames : Array, opcional
+        Nombres de las etiquetas, sino, se utiliza yLabel.
+    line : Array, opcional
+        Linea o hiperplano que divide los datos.
+    plotRange : Array, opcional.
+        Rango para dibujar la gráfica
+    title : String, opcional.
+        Título de la figura.
+
+    Returns
+    -------
+    None.
+
     """
     plt.figure()
     
+    # Si hay etiquetas, dibujarlas.
     if yData is not None:
         
         actColors = cm.rainbow(np.linspace(0, 1, len(yLabel)))
         
+        # Obtener los puntos de cada etiqueta y añadirlos al scatterplot.
         for i, label in enumerate(yLabel):
             x = xData[ np.where(yData == label) ][:, 0]
             y = xData[ np.where(yData == label) ][:, 1]    
@@ -184,7 +207,7 @@ def scatterPlot(xData, yData=None, yLabel=None, yNames=None, line=None, plotRang
             else:
                 plt.scatter(x, y, color=actColors[i], label="{}".format(str(yNames[i])))
 
-        
+        # Si tiene una recta o hiperplano, ubicar cual de los dos es y dibujarlo.
         if line is not None:
             loB = plotRange[0]
             hiB = plotRange[1]
@@ -223,11 +246,33 @@ def scatterPlot(xData, yData=None, yLabel=None, yNames=None, line=None, plotRang
 
 def scatterPlotNonL(xData, yData=None, yLabel=None, yNames=None, function=None, plotRange=None, title=None):
     """
-    WIP
-    
+    Función que permite dibujar puntos, puntos con curvas no lineales.
+
+    Parameters
+    ----------
+    xData : Array
+        Puntos 2D
+    yData : Array, opcional.
+        Datos de las etiquetas numéricas de los puntos 2D.
+    yLabel : Array, opcional
+        Indicación de cuales son las etiquetas como tal.
+    yNames : Array, opcional
+        Nombres de las etiquetas, sino, se utiliza yLabel.
+    function : Función, opcional
+        Función que describe la curva no lineal.
+    plotRange : Array, opcional.
+        Rango para dibujar la gráfica
+    title : String, opcional.
+        Título de la figura.
+
+    Returns
+    -------
+    None.
+
     """
     plt.figure()
     
+    # Funcionamiento similar a scatterPlot()
     if yData is not None:
         
         if function is not None:
@@ -242,11 +287,7 @@ def scatterPlotNonL(xData, yData=None, yLabel=None, yNames=None, function=None, 
             Z = function(X, Y)
             
             plt.contour(X, Y, Z, 0, colors='c', linestyles='dashed')
-            # Z = np.clip(Z, -1, 1)
             plt.contourf(X, Y, Z, 50, cmap='RdBu',vmin=-1, vmax=1)
-            # clrBar = plt.colorbar(clrs)
-            # clrBar.set_label('Signo')
-            # clrBar.set_ticks([-1, 0, 1])
 
             if len(plotRange) == 2:
                 plt.xlim([loB, hiB])
@@ -368,6 +409,22 @@ def frontierFun4(x, y):
 	return (y - 20 * np.square(x) - 5 * x + 3)
 
 def getTagsFF(x, fun):
+    """
+    Obtener las etiquetas para funciones no lineales.
+
+    Parameters
+    ----------
+    x : Array
+        Datos.
+    fun : Function
+        Función no lineal.
+
+    Returns
+    -------
+    Array
+        Vector con las etiquetas y.
+
+    """
     y = []
     for i in x:
         y.append(signo(fun(i[0], i[1])))
@@ -375,7 +432,24 @@ def getTagsFF(x, fun):
     return np.asarray(y) 
 
 def getFunAcc(x, y, fun):
-    
+    """
+    Obtener el accuracy de una función
+
+    Parameters
+    ----------
+    x : Array
+        Datos.
+    y : Array
+        Etiquetas de los datos.
+    fun : Function
+        Función a comparar con las etiquetas.
+
+    Returns
+    -------
+    Float
+        Proporción de etiquetas correctamente clasificadas.
+
+    """
     hit = 0
     
     for x_i, y_i in zip(x,y):
@@ -466,20 +540,25 @@ def ajusta_PLA(datos, label, max_iter, vini, pocket=False):
             if(pocket):
                 # ... obtener el error actual ...
                 actErr = errPLA(datos, label, w)
+                # print(actErr)
                 
                 # ...si es mejor que el mejor error, 
                 # actualizar y guardar el peso.
                 if (actErr < bestErr):
                     bestW = w
                     bestErr = actErr
+                    
+            # Actualizar la iteración
+            i += 1
         
+            # Si se llega al límite, cortar la ejecución.
+            if(i == max_iter): break
+
         # ... Si ha habido un pase entero por los datos y no se modificó w,
         # entonces parar el bucle.
         if (not modified):
             break
         
-        i += 1
-
     # Si es la versión pocket, se devuelve el mejor peso en vez del último.
     if (pocket):
         w = bestW
@@ -490,21 +569,22 @@ def ajusta_PLA(datos, label, max_iter, vini, pocket=False):
 
 def accPLA(x, y, w):
     """
-    Obtener el accuracy de los pesos ajustados por PLA
+    Obtener el accuracy de los pesos ajustados por PLA.
+    Proporción de etiquetas bien clasificadas.
 
     Parameters
     ----------
-    x : TYPE
-        DESCRIPTION.
-    y : TYPE
-        DESCRIPTION.
-    w : TYPE
-        DESCRIPTION.
+    x : Array
+        Vector con los valores de la muestra
+    y : Array
+        Vector con los valores de las etiquetas
+    w : Array
+        Vector con los valores de los pesos.
 
     Returns
     -------
-    perc : TYPE
-        DESCRIPTION.
+    perc : Float
+        Proporción de etiquetas bien clasificadas.
 
     """
     
@@ -528,6 +608,26 @@ def accPLA(x, y, w):
 
 
 def errPLA(x, y, w):
+    """
+    Obtener el error de los datos para PLA.
+    Proporción de datos mal clasificados, complementario de accPLA()
+
+    Parameters
+    ----------
+    x : Array
+        Vector con los valores de la muestra
+    y : Array
+        Vector con los valores de las etiquetas
+    w : Array
+        Vector con los valores de los pesos.
+
+    Returns
+    -------
+    Float
+        Proporción de etiquetas mal clasificadas.
+
+    """
+    
     h_w = x.dot(w)
     
     diffCount = 0
@@ -540,15 +640,40 @@ def errPLA(x, y, w):
     return diffCount / len(y)
 
 def accRL(x, y, w):
-    
+    """
+    Proporción de aciertos de Regresión Lineal utilizando la función Sigmoide
+
+    Parameters
+    ----------
+    x : Array
+        Vector con los valores de la muestra
+    y : Array
+        Vector con los valores de las etiquetas
+    w : Array
+        Vector con los valores de los pesos.
+
+    Returns
+    -------
+    Float
+        Proporción de etiquetas acertadas.
+
+    """
+    # Obtener una predicción de los datos.
     h_w = x.dot(w)
+    
+    # Obtener un vector con las probabilidades según la función sigmoide de
+    # las predicciones.
     probs = 1 / (1 + np.exp(-h_w))
     
+    # Si las predicciones tienen un valor >=0.5, es la etiqueta 1.
+    # sino, es -1.
     probs[ probs >= 0.5 ] = 1
     probs[ probs <  0.5 ] = -1
     
+    # Se contabilizan las etiquetas que coinciden y se retorna la proporción
+    # del total de muestras.
     good = 0
-    
+
     for yHat, yReal in zip(probs, y):
         if(signo(yHat) == signo(yReal)):
             good += 1
@@ -557,13 +682,32 @@ def accRL(x, y, w):
 
 
 def errRL(x, y, w):
+    """
+    Error de Entropía Cruzada
+
+    Parameters
+    ----------
+    x : Array
+        Vector con los valores de la muestra
+    y : Array
+        Vector con los valores de las etiquetas
+    w : Array
+        Vector con los valores de los pesos.
+
+    Returns
+    -------
+    Float
+        Error calculado de entropía cruzada.
+
+    """
     
+    # Adaptación directa de la expresión matemática.
     h_w = x.dot(w)
     return np.mean( np.log( 1 + np.exp( -y * h_w ) ) )
 
 def gradRL(x, y, w):
     """
-    
+    Gradiente de la Regresión Logística
     
     Parameters
     ----------
@@ -580,18 +724,61 @@ def gradRL(x, y, w):
         Vector con los pesos modificicado
 
     """
-        
+    
+    # Es una adaptación matricial de la función, pero no es tan directo como
+    # en otros casos.
+    
+    # Obtener el h_w, que es siempre este valor.
     h_w = x.dot(w)
+    
+    # Convertir a vector columna
     yTemp = np.reshape(y, ([y.shape[0], 1]))
     
+    # - Multiplicar y a x, para cambiar el signo pero mantener la forma de la
+    # matriz x para obtener el numerador de cada división del gradiente.
+    # - Para que funcione bien se utiliza el vector columna en vez del original.
     numerator = yTemp * x
+    
+    # Obtener los denominadores, que serán similares para cada peso. 
     denominator = 1 + np.exp( y * h_w )
     
+    # - La división obtendrá un vector de tamaño [dimensiones w x datos], que luego
+    # se le obtiene la media de los datos con axis=1; de manera que se devuelve
+    # un vector con las componentes de cada peso del vector w.
+    # - Se regresa el negativo, pues así está en la expresión matemática.
     return -np.mean( numerator.T / denominator, axis=1)
 
 def sgd(x, y, wIni, lr, batchSize, maxIters, gradFun, wStop = True):
     """
-    WIP
+    Implementación de Gradiente Descendente Estocástico para cualquier
+    función derivable.
+
+    Parameters
+    ----------
+    x : Array
+        Matriz de caracterísicas.
+    y : Array
+        Vector de etiquetas asociadas a cada x.
+    wIni : Array
+        Vector de pesos iniciales.
+    lr : Float
+        Tasa de aprendizaje.
+    batchSize : Int
+        Tamaño de los lotes.
+    maxIters : Int
+        Máximo número de iteraciones.
+    gradFun : Function
+        Función gradiente a utilizar.
+    wStop : Boolean, opcional.
+        Aplicar el criterio de parada de \\w_old - w\\ < 0.01. 
+        Por defecto está a True.
+
+    Returns
+    -------
+    w : Array
+        Pesos obtenidos luego del aprendizaje.
+    i : Int
+        Número de iteraciones utilizadas.
 
     """
     # Inicializar el contador y los pesos.
@@ -608,6 +795,7 @@ def sgd(x, y, wIni, lr, batchSize, maxIters, gradFun, wStop = True):
 
     # Mientras no se haya llegado al límite de iteraciones...
     while(i < maxIters):
+        # ... almacenar el peso anterior ...
         wOld = w
         # ...Obtener un vector de índices de tamaño x sin repetir...
         shuffleOrder = np.random.permutation(len(x))
@@ -637,13 +825,46 @@ def sgd(x, y, wIni, lr, batchSize, maxIters, gradFun, wStop = True):
             
         # Si el error después de una época es menor al que se desea, también
         # finalizar.              
-        if(wStop and np.linalg.norm( np.abs(wOld - w) ) < 0.01):
+        if(wStop and np.linalg.norm( np.abs(w - wOld) ) < 0.01):
             break
         
     return w, i
 
 def getBestParams(x, y, wIn, eta, batch, maxIters, gradFun):
-    
+    """
+    Obtener el tamaño de lote y la tasa de aprendizaje que mejor reducen el error.
+
+    Parameters
+    ----------
+    x : Array
+        Matriz de caracterísicas.
+    y : Array
+        Vector de etiquetas asociadas a cada x.
+    wIn : Array
+        Vector de pesos iniciales.
+    eta : Array
+        Vector de forma [inicio, fin, paso] para calcular el mejor valor de 
+        tasa de aprendizaje dentro del rango proporcionado.
+    batch : Array
+        Vector de forma [inicio, fin, paso] para calcular el mejor valor de 
+        tamaño de lote dentro del rango proporcionado.
+    maxIters : Int
+        Máximo número de iteraciones.
+    gradFun : Function
+        Función gradiente a utilizar
+
+    Returns
+    -------
+    bestW : Array
+        Vector con los mejores pesos obtenidos.
+    bestEta : Float
+        Mejor valor para la tasa de aprendizaje.
+    bestBatch : Int
+        Mejor varlo para el número de lotes.
+    bestIt : Int
+        Número de iteraciones con los mejores valores.
+
+    """
     wIni = wIn
     
     etas = np.arange(eta[0], eta[1]+eta[2], eta[2])
@@ -671,8 +892,6 @@ def getBestParams(x, y, wIn, eta, batch, maxIters, gradFun):
             
             actual += 1
             if(score < bestScore):
-                # print("BEST")
-                # print(i,j, score, it)
                 bestScore = score
                 
                 bestW = wEnd
@@ -780,19 +999,104 @@ def pseudoinverse(x, y):
     
 
 def evalFunction(x_train, y_train, x_test, y_test, w, accFun, errFun, algoName):
+    """
+    Función auxiliar para dibujar las gráficas del Bonus.
     
+    Es que honestamente se veía feo repetir tanto código casi idéntico.
+
+    Parameters
+    ----------
+    x_train : Array
+        Datos de entrenamiento.
+    y_train : Array
+        Etiquetas de entrenamiento.
+    x_test : Array
+        Datos de test.
+    y_test : Array
+        Etiquetas de test.
+    w : Array
+        Pesos iniciales.
+    accFun : Function
+        Función de accuracy utilizada por el algoritmo.
+    errFun : Function
+        Función de error utilizada por el algoritmo.
+    algoName : String
+        Nombre del algoritmo.
+
+    Returns
+    -------
+    errIn : Float
+        Error dentro de la muestra.
+    errTest : Float
+        Error del conjunto de test.
+
+    """
+    
+    # Dibujar el conjunto de entrenamiento.
     scatterPlot(x_train[:,1:], yData=y_train, yLabel=[1, -1], yNames=["8", "4"], line=w, plotRange=[0, 1, -7.5, 0.5], title="{}: Entrenamiento".format(algoName))
 
+    # Calcular los errores e imprimirlo por pantalla.
+    errIn  = errFun(x_train, y_train, w)
+    errTest =  errFun(x_test, y_test, w)
+
     print("\t - Pesos:\t\t", w)
-    print("\t - Error:\t\t", errFun(x_train, y_train, w))
+    print("\t - Error:\t\t", errIn)
     print("\t - Accuracy:\t {:.2f}%".format(accFun(x_train, y_train, w) * 100))
 
+    # Ídem con test.
     print("\tTest:")
 
     scatterPlot(x_test[:,1:], yData=y_test, yLabel=[1, -1], yNames=["8", "4"], line=w, plotRange=[0, 1, -7.5, 0.5], title="{}: Test".format(algoName))
 
-    print("\t - Error:\t\t", errFun(x_test, y_test, w))
+    print("\t - Error:\t\t", errTest)
     print("\t - Accuracy:\t {:.2f}%".format(accFun(x_test, y_test, w) * 100))
+    
+    return errIn, errTest
+
+def boundEin(Ein, N, dVC, delta):
+    """
+    Calcular la cota de E_out con E_in
+
+    Parameters
+    ----------
+    Ein : Float
+        Valor de E_in.
+    N : Int
+        Número de muestras.
+    dVC : Int
+        Valor de la dimensión VC.
+    delta : Float
+        Certeza de la cota.
+
+    Returns
+    -------
+    Float
+        Cota calculada.
+
+    """
+    return Ein + np.sqrt( (8 / N) * np.log10( (4 * (np.power((2 * N), dVC) + 1) / delta)))
+                         
+def boundEtest(Etest, N, cardH, delta):
+    """
+    Calcular la cota de E_out con E_test
+
+    Parameters
+    ----------
+    Ein : Float
+        Valor de E_in.
+    N : Int
+        Número de muestras.
+    cardH : Int
+        Cardinalidad de la clase de funciones H.
+    delta : Float
+        Certeza de la cota.
+
+    Returns
+    -------
+    Float
+        Cota calculada.
+    """
+    return Etest + np.sqrt( (1 / (2 * N)) * np.log10( (2 * cardH) / delta ))
 
 ## FUNCIONES BONUS FIN
 
@@ -830,12 +1134,15 @@ print("+---------------+")
 print("|Ejercicio 1.2.a|")
 print("+---------------+\n")
 
+# Generar un conjunto de datos como se pide.
 x1_2 = simula_unif(100, 2, [-50, 50])
 
+# No se indica ningún valor en particular, se seleccionan dos aleatorios.
 a, b = simula_recta([11, 16])
 
 print("Generando recta con valores a = {:.4f} y b = {:.4f}".format(a, b))
 
+# Se obtienen las etiquetas y se dibuja el gráfico.
 y1_2 = getTags(x1_2, a, b)
 
 scatterPlot(x1_2, yData=y1_2, yLabel=[1,-1], line=[a, b], plotRange=[-50,50], title="Etiquetado perfecto con recta $y={:.2f} + x \cdot {:.2f}$".format(b,a))
@@ -848,14 +1155,13 @@ print("+---------------+")
 print("|Ejercicio 1.2.b|")
 print("+---------------+\n")
 
-# Dibujar una gráfica donde los puntos muestren el resultado de su etiqueta, junto con la recta usada para ello
+# Dibujar una gráfica donde los puntos muestren el resultado de su etiqueta, 
+# junto con la recta usada para ello
 # Array con 10% de indices aleatorios para introducir ruido
 
 y1_2Noise = addNoise(y1_2, 0.1)
 
 scatterPlot(x1_2, yData=y1_2Noise, yLabel=[1,-1], line=[a, b], plotRange=[-50,50], title="Etiquetado con 10% de error; recta $y={:.2f} + x \cdot {:.2f}$".format(b,a))
-
-# stop()
 
 #%% EJERCICIO 1.2.c
 #############
@@ -870,6 +1176,7 @@ fFuncs = [frontierFun1, frontierFun2, frontierFun3, frontierFun4]
 
 print("Funciones más complejas con etiquetado lineal:")
 
+# Dibujar las fronteras de decisión con los datos lineales.
 
 for name, func in zip(fNames, fFuncs):
     
@@ -877,6 +1184,8 @@ for name, func in zip(fNames, fFuncs):
     scatterPlotNonL(x1_2, yData=y1_2Noise, yLabel=[1, -1], function=func, plotRange=[-50, 50], title="Función ${}(x,y)$ con etiquetas lineales + ruido".format(name))
 
 print("\nFunciones más complejas con etiquetado etiquetado propio + ruido:")
+
+# Ahora etiquetar los datos x1_2 con la propia función y dibujarlo.
 
 for name, func in zip(fNames, fFuncs):
     
@@ -886,8 +1195,6 @@ for name, func in zip(fNames, fFuncs):
     print(" - {} Accuracy:\t {:.2f}%".format(name, getFunAcc(x1_2, yfN, func) * 100))
     scatterPlotNonL(x1_2, yData=yfN, yLabel=[1, -1], function=func, plotRange=[-50, 50], title="Función ${}(x,y)$ con etiquetas propias + ruido".format(name))
 
-
-# stop()
 
 ### EJERCICIO 2 
 #############
@@ -905,18 +1212,24 @@ print("+---------------+\n")
 
 print("PLA: Usando datos del ejercicio 1.2.a\n")
 
-PLA_MAXITERS = 5000
+# Definiendo valores para utilizar con PLA.
+PLA_MAXITERS = 15000
 wIni = np.array([0, 0, 0])
+
+# Realizar la ejecución del algoritmo e imprimir resultados.
 w, iters = ajusta_PLA(addBias(x1_2), y1_2, PLA_MAXITERS, wIni)
 
 print("Entrenamiento con vector inicializado a cero:")
 print(" - Pesos:\t\t", w)
 print(" - Iteraciones:\t", iters)
 print(" - Accuracy:\t {:.2f}%".format(accPLA(addBias(x1_2), y1_2, w) * 100))
+print(" - Error:\t\t {:.2f}%".format(errPLA(addBias(x1_2), y1_2, w) * 100))
 
 scatterPlot(x1_2, yData=y1_2, yLabel=[1,-1], line=w, plotRange=[-50,50], title="PLA: Ajuste Perfecto, inicialización a cero.")
 
-# Random initializations
+
+# Repetir el experimento 10 veces pero con pesos inicializados entre [0,1]
+
 wIniArr = []
 wFinArr = []
 itArr   = []
@@ -939,12 +1252,11 @@ for i in range(0,10):
 itMean /= 10
 print('\nValor medio de iteraciones necesario para converger: {}'.format(itMean))
 
-# stop()
-
 #%% EJERCICIO 2.1.b
 #############
 # Ahora con los datos del ejercicio 1.2.b
 
+# Mismo procedimiento que el ejercicio 2.1.a
 print("+---------------+")
 print("|Ejercicio 2.1.b|")
 print("+---------------+\n")
@@ -958,6 +1270,7 @@ print("Entrenamiento con vector inicializado a cero:")
 print(" - Pesos:\t\t", w)
 print(" - Iteraciones:\t", iters)
 print(" - Accuracy:\t {:.2f}%".format(accPLA(addBias(x1_2), y1_2Noise, w) * 100))
+print(" - Error:\t\t {:.2f}%".format(errPLA(addBias(x1_2), y1_2Noise, w) * 100))
 
 scatterPlot(x1_2, yData=y1_2Noise, yLabel=[1,-1], line=w, plotRange=[-50,50], title="PLA: 10% ruido, inicialización a cero.")
 
@@ -979,15 +1292,13 @@ for i in range(0,10):
     itMean += itTemp
     actAcc = accPLA(addBias(x1_2), y1_2Noise, wEndTemp)
     accMean += actAcc
-    print("{:2d} | ({: 8.4f}, {: 8.4f}, {: 8.4f}) | ({: 8.4f}, {: 8.4f}, {: 8.4f}) | {: 3.2f}%  | {:5d}" \
+    print("{:2d} | [{: 8.4f}, {: 8.4f}, {: 8.4f}] | [{: 8.4f}, {: 8.4f}, {: 8.4f}] | {: 3.2f}%  | {:5d}" \
           .format(i, wIniTemp[0], wIniTemp[1], wIniTemp[2], wEndTemp[0], wEndTemp[1], wEndTemp[2], \
               (actAcc * 100), itTemp))
 
 itMean /= 10
 accMean /= 10
-print('\nValor medio de accuracy: {: 3.2f}%'.format(accMean * 100))
-
-# stop()
+print('\nValor medio de Accuracy: {: 3.2f}%'.format(accMean * 100))
 
 #%% EJERCICIO 2.2
 #############
@@ -997,31 +1308,44 @@ print("+-------------+")
 print("|Ejercicio 2.2|")
 print("+-------------+\n")
 
-
 print("Obteniendo 100 datos de muestra...")
+
+# Generar los datos de prueba como se pide.
 x2_train = simula_unif(100, 2, [0, 2])
 
+# Se elige una linea que pase por el plano indicado, de manera aleatoria.
 a_2, b_2 = simula_recta([0, 2])
 
+# Con los valores obtenidos, generar las etiquetas.
 y2_train = getTags(x2_train, a_2, b_2)
 
+# Mostrarlo en pantalla.
 scatterPlot(x2_train, yData=y2_train, yLabel=[1,-1], line=[a_2, b_2], plotRange=[-0.25,2.25], title="100 datos generados con recta ideal")
 
+# Definiendo parámetros para el SGD. 
 RL_MAXITERS = 100000
 wIni = np.array([0, 0, 0])
 
+# Añadir a los datos el sesgo de una vez.
 x2_trainB = addBias(x2_train)
 
-print("Entrenamiento con mejores parámetros:")
+# !Aviso! Sección comentada porque se obtuvieron ya los mejores valores.
+#           - La función se tarda bastante pero funciona.
+#           - Calcula, para los datos el mejor valor de eta y de tamaño de lote.
+
+# print("Entrenamiento con mejores parámetros:")
 # etas = [0.0001, 0.1, 0.0005]
 # batches = [2, 100, 2]
 # bestW, lr, batchSize, it_2 = getBestParams(x2_trainB, y2_train, wIni, etas, batches, RL_MAXITERS, gradRL)
 
+# Mejores valores obtenidos de tasa de aprendizaje y tamaño de lote.
 batchSize = 2
 lr = 0.09960000000000001
 
+# Realizar SGD con RL
 bestW, it_2 = sgd(x2_trainB, y2_train, wIni, lr, batchSize, RL_MAXITERS, gradRL)
 
+# Mostrar el resultado del entrenamiento
 scatterPlot(x2_train, yData=y2_train, yLabel=[1,-1], line=bestW, plotRange=[-0.25, 2.25], title="RL: Recta obtenida por SGD para datos de entrenamiento")
 
 print(" - Batch Size:\t", batchSize)
@@ -1031,11 +1355,8 @@ print(" - Error:\t\t", errRL(x2_trainB, y2_train, bestW))
 print(" - Accuracy:\t{: 3.2f}%".format(accRL(x2_trainB, y2_train, bestW) * 100))
 print(" - Iteraciones:\t", it_2)
 
-# stop()
-
 # Usar la muestra de datos etiquetada para encontrar nuestra solución g y estimar Eout
 # usando para ello un número suficientemente grande de nuevas muestras (>999).
-
 
 x2_test = simula_unif(1611, 2, [0, 2])
 y2_test = getTags(x2_test, a_2, b_2)
@@ -1044,11 +1365,6 @@ print("Resultado para conjunto de test con tamaño >999:")
 print(" - Error:\t\t", errRL(addBias(x2_test), y2_test, bestW))
 print(" - Accuracy:\t{: 3.2f}%".format(accRL(addBias(x2_test), y2_test, bestW) * 100))
 scatterPlot(x2_test, yData=y2_test, yLabel=[1,-1], line=bestW, plotRange=[-0.25, 2.25], title="RL: Recta en nuevos datos generados de test")
-
-# Comentar en memoria primer experimento con estos datos: 
-# etas = [0.0001, 0.1, 0.0005]
-# batches = [2, 100, 2]
-
 
 totalErr = 0
 totalIts = 0
@@ -1110,7 +1426,6 @@ x, y = readData('datos/X_train.npy', 'datos/y_train.npy', [4,8], [-1,1])
 # Lectura de los datos para el test
 x_test, y_test = readData('datos/X_test.npy', 'datos/y_test.npy', [4,8], [-1,1])
 
-
 #mostramos los datos
 fig, ax = plt.subplots()
 ax.plot(np.squeeze(x[np.where(y == 1),1]), np.squeeze(x[np.where(y == 1),2]), 'o', color='blue', label='8')
@@ -1129,7 +1444,15 @@ plt.legend()
 plt.show()
 
 
-#%%
+#%% BONUS 2.a
+#########
+
+# Definir dos vectores para almacenar E_in y E_test.
+eIns = []
+eTests = []
+
+
+# Utilizar Pseudoinversa, PLA, PLA-Pocket y RL con los datos de los números.
 
 print("+---------+")
 print("|Bonus 2.a|")
@@ -1140,34 +1463,35 @@ print("-------------------------------")
 
 wPseudo = pseudoinverse(x, y)
 
-evalFunction(x, y, x_test, y_test, wPseudo, accPLA, errLinR, "Pseudoinversa")
+actIn, actTest = evalFunction(x, y, x_test, y_test, wPseudo, accPLA, errLinR, "Pseudoinversa")
+eIns.append(actIn)
+eTests.append(actTest)
 
-
-#%%
 
 print("PLA")
 print("---")
 wPLA, _ = ajusta_PLA(x, y, PLA_MAXITERS, [0, 0 ,0])
 
-evalFunction(x, y, x_test, y_test, wPLA, accPLA, errPLA, "PLA")
+actIn, actTest = evalFunction(x, y, x_test, y_test, wPLA, accPLA, errPLA, "PLA")
+eIns.append(actIn)
+eTests.append(actTest)
 
 
-#%%
 print("PLA-Pocket")
 print("----------")
 
 wPocket, _ = ajusta_PLA(x, y, PLA_MAXITERS, [0, 0 ,0], pocket=True)
 
-evalFunction(x, y, x_test, y_test, wPocket, accPLA, errPLA, "PLA-Pocket")
+actIn, actTest = evalFunction(x, y, x_test, y_test, wPocket, accPLA, errPLA, "PLA-Pocket")
+eIns.append(actIn)
+eTests.append(actTest)
 
-
-#%%
 
 print("Regresión Logística")
 print("-------------------")
 
-# batchSize = 2
-# lr = 0.09960000000000001
+# Se vuelve a probar varios valores para estos datos, luego de una (muy) larga
+# ejecución se obtienen esos valores de eta y batchsize.
 
 #etas = [0.001, 0.1, 0.0005]
 #batches = [2, 100, 2]
@@ -1178,10 +1502,14 @@ lr=  0.08700000000000001
 
 wRL, _ = sgd(x, y, [0, 0, 0], lr, batchSize, RL_MAXITERS, gradRL)
 
-evalFunction(x, y, x_test, y_test, wRL, accRL, errRL, "RL")
+actIn, actTest = evalFunction(x, y, x_test, y_test, wRL, accRL, errRL, "RL")
+eIns.append(actIn)
+eTests.append(actTest)
 
+#%% BONUS 2.c
+#########
 
-#%% Bonus 1.c
+# Repitiendo pero ahora los pesos iniciales son el resultado de la Pseudoinversa.
 
 print("+---------+")
 print("|Bonus 2.c|")
@@ -1209,17 +1537,35 @@ wRL, _ = sgd(x, y, wIniBonus, lr, batchSize, RL_MAXITERS, gradRL)
 
 evalFunction(x, y, x_test, y_test, wRL, accRL, errRL, "RL+LinR")
 
+#%% BONUS 2.D
+#########
 
-#%%
+# Calculando las cotas para cada algoritmo.
+
 print("+---------+")
 print("|Bonus 2.d|")
 print("+---------+\n")
 
+# Se definen las variables importantes:
+# - La certeza que se quiere.
 delta = 0.05
+# - La dimensión VC en todos los algoritmos es 3.
 dVC = 3
+# - En test solo hay una función en H.
+cardH = 1
+# - Valor de N, para train y test.
 N_in = len(y)
 N_test = len(y_test)
 
-eIns = []
+# - Pa' que se vean los nombres de los algoritmos.
+names = ["Pseudoinversa", "PLA", "PLA-Pocket", "RL"]
 
+# Realizando los cálculos con la función.
+print("Cotas de Error")
+print("--------------\n")
 
+for i in range(4):
+    print(names[i] + ":")
+    print("Cota E_in =", boundEin(eIns[i], N_in, dVC, delta))
+    print("Cota E_test =", boundEtest(eTests[i], N_test, cardH, delta))
+    print("\n")
