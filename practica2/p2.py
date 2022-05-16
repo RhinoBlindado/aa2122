@@ -1537,7 +1537,7 @@ wRL, _ = sgd(x, y, wIniBonus, lr, batchSize, RL_MAXITERS, gradRL)
 
 evalFunction(x, y, x_test, y_test, wRL, accRL, errRL, "RL+LinR")
 
-#%% BONUS 2.D
+#%% BONUS 2.d
 #########
 
 # Calculando las cotas para cada algoritmo.
