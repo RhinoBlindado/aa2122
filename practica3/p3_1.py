@@ -32,7 +32,6 @@ from tabulate import tabulate as tb
 # Fijando la semilla
 np.random.seed(1995)
 
-
 # FUNCIONES PARA EJERCICIOS
 
 def encodeCycle(data, col, maxVal):
@@ -42,8 +41,8 @@ def encodeCycle(data, col, maxVal):
 def monthToInt(data, col, monthDict):
     data[col] = data[col].map(monthDict)
 
-def loadData(dataPath):
-    dataset = pd.read_csv(dataPath, sep=";", header=0)
+def loadData(dataPath, sep=";", header=0):
+    dataset = pd.read_csv(dataPath, sep=sep, header=header)
     return dataset
 
 def processData(data, categorical, binary, cyclical, custom):
@@ -81,7 +80,7 @@ def normalizeData(train, test, normCols, featRange=((-1, 1))):
     test[normCols] = scaler.transform(test[normCols])
 
 
-def printLabelFrec(df, column = None, testOverride = False):
+def printLabelFrec(df, column = None, testOverride = False, decimals=".2f"):
     
     if not testOverride:
         labels = np.unique(df[column])
@@ -101,19 +100,21 @@ def printLabelFrec(df, column = None, testOverride = False):
 
         frecs.append(frec)
         
-        table.append([l, frec * 100])
+        table.append([str(l), frec * 100])
 
-    print(tb(table, headers=["Etiquetas", "%"], floatfmt=".2f"))
+    print(tb(table, headers=["Etiquetas", "%"], floatfmt=decimals))
     return labels, np.array(frecs)
     
 
-def plotLabelFrec(labels, frecs, rotation="vertical", title=""):
+def plotLabelFrec(labels, frecs, rotation="45", title=""):
     plt.figure()
     
     scaleColor = lambda a, top : a / top 
     actColors = cm.rainbow(scaleColor(frecs, np.max(frecs)))
     
     plt.bar(labels, frecs, color=actColors)       
+    plt.ylabel("Proporción en muestra")
+    plt.xlabel("Etiquetas")
     plt.xticks(rotation=rotation)
  
     plt.title(title)
