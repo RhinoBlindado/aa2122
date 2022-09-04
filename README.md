@@ -12,7 +12,7 @@ WIP
 
 ---
 # Machine Learning #
-## :books: 2021-2022 Course, Computer Science Engineering Degree, ETSIIT UGR.
+## :books: 2021-2022 Course, Computer Science Degree, ETSIIT UGR.
 ### :pushpin: Introduction
 WIP
 ### :gear: Compilation
